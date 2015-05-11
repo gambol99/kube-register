@@ -11,6 +11,7 @@ Usage of ./kube-register:
   -fleet-endpoint="": fleet endpoint
   -healthz-port="10255": the kubelet healthz port
   -metadata="k8s=kubelet": comma-delimited key/value pairs
+  -reverse-lookup=false: execute reverse lookup for registering hostnames instead of hosts' public IPs
   -sync-interval=30: sync interval
   -version=false: print version and exit
 ```
@@ -20,6 +21,10 @@ Usage of ./kube-register:
 ```
 kube-register -metadata="kubelet=true" -fleet-endpoint="http://127.0.0.1:4002" -apiserver-endpoint="http://127.0.0.1:8080"
 ```
+
+By default kube-register registers new machines with their public IP addresses, found in fleet. By setting `-reverse-lookup=true` kube-register will do a reverse DNS lookup to get the machine's hostname and registers the machine with its hostname instead with its IP address. Make sure the machine's IP resolves to the same hostname that is printed by `hostname -f` on the machine itself.
+
+### Enable the fleet endpoint
 
 The kube-register services requires access to a fleet-endpoint. For example on a CoreOS system, enable the fleet end-point with the following systemd socket file:
 

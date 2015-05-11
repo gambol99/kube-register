@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -10,7 +11,7 @@ import (
 	"github.com/coreos/fleet/client"
 )
 
-func getMachines(endpoint, healthzPort string, metadata map[string][]string) ([]string, error) {
+func getMachines(endpoint, healthzPort string, metadata map[string][]string, reverseLookup bool) ([]string, error) {
 	dialFunc := net.Dial
 	machineList := make([]string, 0)
 	u, err := url.Parse(endpoint)
@@ -39,7 +40,23 @@ func getMachines(endpoint, healthzPort string, metadata map[string][]string) ([]
 	}
 	for _, m := range machines {
 		if hasMetadata(m, metadata) && isHealthy(m.PublicIP, healthzPort) {
-			machineList = append(machineList, m.PublicIP)
+			if reverseLookup {
+				hostnames, err := net.LookupAddr(m.PublicIP)
+				if err != nil {
+					return nil, err
+				}
+				if len(hostnames) < 1 {
+					return nil, errors.New("Could not get hostname for IP " + m.PublicIP)
+				}
+				hostname := hostnames[0]
+				// remove trailing dot
+				if hostname[len(hostname)-1] == '.' {
+					hostname = hostname[:len(hostname)-1]
+				}
+				machineList = append(machineList, hostname)
+			} else {
+				machineList = append(machineList, m.PublicIP)
+			}
 		}
 	}
 	return machineList, nil

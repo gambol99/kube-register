@@ -16,6 +16,7 @@ var (
 	metadata      string
 	syncInterval  int
 	healthzPort   string
+	reverseLookup bool
 	printVersion  bool
 )
 
@@ -27,6 +28,7 @@ func init() {
 	flag.StringVar(&healthzPort, "healthz-port", "10255", "the kubelet healthz port")
 	flag.IntVar(&syncInterval, "sync-interval", 30, "sync interval")
 	flag.BoolVar(&printVersion, "version", false, "print version and exit")
+	flag.BoolVar(&reverseLookup, "reverse-lookup", false, "execute reverse lookup for registering hostnames instead of hosts' public IPs")
 }
 
 func main() {
@@ -43,7 +45,7 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	for {
-		machines, err := getMachines(fleetEndpoint, healthzPort, m)
+		machines, err := getMachines(fleetEndpoint, healthzPort, m, reverseLookup)
 		if err != nil {
 			log.Println(err)
 		}

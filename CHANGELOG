@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.0.4] - 2015-05-11
+### Changed
+- New `reverse-lookup` flag executes a reverse lookup for registering minions via hostnames instead of the public IP.
+
 ## [0.0.3] - 2015-04-21  
 ### Changed
 - The default kubelet healthz port is now set to 10255.
