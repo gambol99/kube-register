@@ -11,9 +11,15 @@ import (
 	"github.com/coreos/fleet/client"
 )
 
-func getMachines(endpoint, healthzPort string, metadata map[string][]string, reverseLookup bool) ([]string, error) {
+type Machine struct {
+	Name string
+	Metadata map[string]string
+}
+
+func getMachines(endpoint, healthzPort string, metadata map[string][]string, reverseLookup bool) ([]Machine, error) {
 	dialFunc := net.Dial
-	machineList := make([]string, 0)
+	machineList := make([]Machine, 0)
+	/* step: parse the fleet endpoint url */
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, err
@@ -39,7 +45,13 @@ func getMachines(endpoint, healthzPort string, metadata map[string][]string, rev
 		return nil, err
 	}
 	for _, m := range machines {
+		/* step: check if the machine has the metadata specified on the command line */
 		if hasMetadata(m, metadata) && isHealthy(m.PublicIP, healthzPort) {
+			machine := Machine{
+				Name: m.PublicIP,
+				Metadata: m.Metadata,
+			}
+
 			if reverseLookup {
 				hostnames, err := net.LookupAddr(m.PublicIP)
 				if err != nil {
@@ -53,10 +65,9 @@ func getMachines(endpoint, healthzPort string, metadata map[string][]string, rev
 				if hostname[len(hostname)-1] == '.' {
 					hostname = hostname[:len(hostname)-1]
 				}
-				machineList = append(machineList, hostname)
-			} else {
-				machineList = append(machineList, m.PublicIP)
+				machine.Name = hostname
 			}
+			machineList = append(machineList, machine)
 		}
 	}
 	return machineList, nil

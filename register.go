@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 type Node struct {
@@ -18,6 +19,7 @@ type Node struct {
 
 type Metadata struct {
 	Name string `json:"name,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type Spec struct {
@@ -28,19 +30,22 @@ type NodeResp struct {
 	Reason string `json:"reason,omitempty"`
 }
 
-func register(endpoint, addr string) error {
+func register(endpoint *url.URL, machine Machine) error {
 	var n Node
 	n.Kind = "Node"
 	n.APIVersion = "v1beta3"
-	n.Metadata.Name = addr
-	n.Spec.ExternalID = addr
+	n.Metadata.Name = machine.Name
+	if nodelabels {
+		n.Metadata.Labels = machine.Metadata
+	}
+	n.Spec.ExternalID = machine.Name
 
 	data, err := json.Marshal(&n)
 	if err != nil {
 		return err
 	}
 
-	url := fmt.Sprintf("%s/api/v1beta3/nodes", endpoint)
+	url := fmt.Sprintf("%s://%s/api/v1beta3/nodes", endpoint.Scheme, endpoint.Host)
 
 	res, err := http.Post(url, "application/json", bytes.NewReader(data))
 	if err != nil {
@@ -49,7 +54,7 @@ func register(endpoint, addr string) error {
 	defer res.Body.Close()
 
 	if res.StatusCode == 202 || res.StatusCode == 200 || res.StatusCode == 201 {
-		log.Printf("registered machine: %s\n", addr)
+		log.Printf("registered machine: %s\n", machine.Name)
 		return nil
 	}
 
@@ -59,7 +64,7 @@ func register(endpoint, addr string) error {
 	}
 
 	if res.StatusCode != 409 {
-		return fmt.Errorf("error registering: %s %d %s", addr, res.StatusCode, string(data))
+		return fmt.Errorf("error registering: %s %d %s", machine.Name, res.StatusCode, string(data))
 	}
 
 	nr := &NodeResp{}
@@ -71,5 +76,5 @@ func register(endpoint, addr string) error {
 		return nil
 	}
 
-	return fmt.Errorf("error registering: %s %s", addr, nr.Reason)
+	return fmt.Errorf("error registering: %s %s", machine.Name, nr.Reason)
 }
