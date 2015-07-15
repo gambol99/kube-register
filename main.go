@@ -4,15 +4,16 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-	"net/url"
 )
 
 var (
 	apiEndpoint   string
+	apiVersion    string
 	fleetEndpoint string
 	metadata      string
 	syncInterval  int
@@ -28,6 +29,7 @@ func init() {
 	flag.StringVar(&fleetEndpoint, "fleet-endpoint", "", "fleet endpoint")
 	flag.StringVar(&metadata, "metadata", "k8s=kubelet", "comma-delimited key/value pairs")
 	flag.StringVar(&healthzPort, "healthz-port", "10255", "the kubelet healthz port")
+	flag.StringVar(&apiVersion, "api-version", "v1beta3", "the version of the kubernetes api")
 	flag.IntVar(&syncInterval, "sync-interval", 30, "sync interval")
 	flag.BoolVar(&printVersion, "version", false, "print version and exit")
 	flag.BoolVar(&reverseLookup, "reverse-lookup", false, "execute reverse lookup for registering hostnames instead of hosts' public IPs")

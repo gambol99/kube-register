@@ -18,7 +18,7 @@ type Node struct {
 }
 
 type Metadata struct {
-	Name string `json:"name,omitempty"`
+	Name   string            `json:"name,omitempty"`
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
@@ -33,7 +33,7 @@ type NodeResp struct {
 func register(endpoint *url.URL, machine Machine) error {
 	var n Node
 	n.Kind = "Node"
-	n.APIVersion = "v1beta3"
+	n.APIVersion = apiVersion
 	n.Metadata.Name = machine.Name
 	if nodelabels {
 		n.Metadata.Labels = machine.Metadata
@@ -45,7 +45,7 @@ func register(endpoint *url.URL, machine Machine) error {
 		return err
 	}
 
-	url := fmt.Sprintf("%s://%s/api/v1beta3/nodes", endpoint.Scheme, endpoint.Host)
+	url := fmt.Sprintf("%s://%s/api/%s/nodes", endpoint.Scheme, endpoint.Host, apiVersion)
 
 	res, err := http.Post(url, "application/json", bytes.NewReader(data))
 	if err != nil {
